@@ -1,0 +1,109 @@
+#! /usr/bin/env ruby
+#
+
+
+require 'optparse'
+require 'csv'
+
+require 'rubygems'
+require 'geokit'
+
+=begin
+require 'geocoder'
+Geocoder.configure(
+  :lookup => :geocoder_ca,
+  :units => :km
+)
+Geocoder.coordinates("12, 8e rue Est, Rimouski")
+=end
+
+
+options={}
+options[:headers]=false
+options[:separator]=";"
+options[:output_separator]=";"
+OptionParser.new do |opts|
+   opts.banner=" Géodécode une addresse
+
+      geodecode "
+
+   opts.on("-h","le csv a un header") do |h|
+      options[:headers]=h
+   end
+   opts.on("-A [COL]","Colonne de l'addresse") do |a|
+      options[:address]=a
+   end
+   opts.on("-s [SEP]","--separator [SEP]", "Separator is sep") do |s|
+   	options[:separator]=s
+   end
+   opts.on("-S [SEP]","--output_separator [SEP]", "Output separator is sep") do |r|
+   	options[:output_separator]=r
+   end
+   opts.on("-p [COL]","colonne numéro de porte") do |r|
+      options[:porte]=r
+   end
+   opts.on("-r [COL]","colonne rue") do |r|
+      options[:rue]=r
+   end
+   opts.on("-V [COL]","Ville") do |r|
+      options[:ville]=r
+   end
+end.parse!
+
+Geokit::default_units = :meters
+Geokit::Geocoders::CaGeocoder.key = false
+
+
+#     irb> a=Geokit::Geocoders::GoogleGeocoder.geocode '140 Market St, San Francisco, CA'
+#    irb> a.ll
+#     => 37.79363,-122.396116
+
+file_csv=ARGV[0]
+output=ARGV[1]
+
+csv_options={encoding: 'UTF-8:UTF-8'}
+if options[:headers]
+   csv_options[:headers]=true
+end
+csv_options[:col_sep]=options[:separator]
+
+#todo: tester si il y a une addresse ou si il faut combiner les colonnes
+
+#puts options
+#puts csv_options
+csv=CSV.read(file_csv,csv_options)
+
+data=[]
+headers=csv.headers
+headers.push("lat")
+headers.push("lon")
+
+if options[:headers]
+   data<<headers
+end
+
+Addresses={}
+
+csv.each do |line|
+   l=line
+
+   addr="#{line[options[:porte]]}, #{line[options[:rue]]}, #{+options[:ville]}"
+   if Addresses.key?(addr)
+      l.push(Addresses[addr][0])
+      l.push(Addresses[addr][1])
+   else
+      p=Geokit::Geocoders::CaGeocoder.geocode(addr)
+      ll=p.ll.split(",")
+      l.push(ll[0])
+      l.push(ll[1])
+      Addresses[addr]=ll
+   end
+   data<<l
+end
+
+
+CSV.open(output,'wb',col_sep:options[:output_separator],encoding: 'UTF-8:UTF-8') do |ocsv|
+   data.each do |line|
+      ocsv<<line
+   end
+end

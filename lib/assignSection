@@ -1,0 +1,16 @@
+#! /usr/bin/env ruby
+#
+# Passe une liste de lat/long et détermine dans quel section elle se trouve
+#
+# SYNOPSIS
+#   assignSection <data csv> <geojson> -l <colonne latitude> -L <colonne longitude> -n <nom propriété reference geojson>
+
+require 'rubygems'
+require 'geokit'
+
+points = []
+points << Geokit::LatLng.new("-34.8922513", "-56.1468951")
+points << Geokit::LatLng.new("-34.905204", "-56.1848322")
+points << Geokit::LatLng.new("-34.9091105", "-56.170756")
+polygon = Geokit::Polygon.new(points)
+polygon.contains? polygon.centroid

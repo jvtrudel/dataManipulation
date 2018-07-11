@@ -1,0 +1,22 @@
+#! /usr/bin/env ruby
+#
+# Transforme un fichier csv en geojson
+
+
+require 'csv'
+
+
+
+
+headers
+
+point=[48,-68]
+properties
+
+data={ "Type"=>"FeaturesCollection", "name"=>"collection","features"=>[]}
+
+def add points(data, point, properties)
+
+end
+
+puts data["Features"]
